@@ -1,0 +1,43 @@
+<script>
+/** 
+ * utf8Encoding
+ * 
+ * str [string] 需要被编码的字符串
+ * 
+ * 参考：http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
+ */
+function utf8Encoding (str) {
+  // 转化为16进制
+  const hexResult = parseInt(str.codePointAt().toString(16), 16)
+  // 转化为2进制
+  const binaryResult = str.codePointAt().toString(2)
+
+  if (hexResult < 0x007F) {
+    return '0' + utilPrefixInteger(binaryResult, 7)
+  } else if (hexResult > 0x007F && hexResult < 0x07FF) {
+    const expectLength = 11
+    const res = utilPrefixInteger(binaryResult, expectLength)
+    return '110' + res.substring(0, 5) + '10' + res.substring(5, expectLength)
+  } else if (hexResult > 0x07FF && hexResult < 0xFFFF) {
+    const expectLength = 16
+    const res = utilPrefixInteger(binaryResult, expectLength)
+    return '1110' + res.substring(0, 4) + '10' + res.substring(4, 10) + res.substring(10, expectLength)
+  } else {
+    throw new Error('超出范围')
+  }
+}
+
+/**
+ * 工具方法：补0
+ * 
+ * @params str [number] 需补0的参数
+ * @params length [number] 期望位数
+ */
+function utilPrefixInteger (str, length) {
+  return (Array(length + 1).join('0') + str).slice(-length) 
+}
+
+var text = '严'
+document.write(text)
+document.write(utf8Encoding(text))
+</script>
