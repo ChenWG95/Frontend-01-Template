@@ -260,35 +260,5 @@ const \u5389\u5bb3 = 1
 这样就可以了，我们在工作中可以通过工程手段进行自动转译，还有一种转译场景是“\u5389\u5bb3”
 
 ## JS词法
-InputElement
-- WhiteSpace：空白字符
-  - TAB
-  - VT：竖空格
-  - FF：from-feed
-  - SP：空格
-  - NBSP：no-break 空格
-  - ZWNBSP：zero-width空格 "\uFEFF"
-  - USP
-- LineTerminator：换行符
-  - LF：line-feed也就是\n
-  - CR：carriage-return
-  - LS：不建议用
-  - PS：不建议用
-- Comment：注释
-  - //
-  - /**/
-- Token：（重要的东西）
-  - Identifier
-    - 变量名：不能和关键字重合【特殊：比如get】
-    - 属性：可以和关键字重合
-  - Punctuator
-    - KeyWords
-    - 符号
-  - Template
-  - Literal
-    - NullLiteral：null
-    - BooleanLiteral：true | false
-    - NumberLiteral
-    - StringLiteral
-
+![Javascript词法](./Javascript词法.png)
 详见《JS》标准中：A.1 Lexical Grammar章节
