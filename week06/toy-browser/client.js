@@ -126,7 +126,7 @@ class ResponseParser {
       if (char === '\n') {
         this.current = this.WAITING_HEADER_NAME
       }
-    } 
+    }
     // headers
     else if (this.current === this.WAITING_HEADER_NAME) {
       if (char === ':') {
