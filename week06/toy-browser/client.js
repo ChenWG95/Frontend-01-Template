@@ -2,6 +2,10 @@ const net = require('net')
 const parser = require('./parse')
 
 class Request {
+  // method get/post/options
+  // url host+port+path
+  // body k/v
+  // headers content-type  content-length 必有
   constructor (options) {
     this.method = options.method || 'GET'
     this.host = options.host
@@ -62,6 +66,10 @@ ${this.bodyText}`
   }
 }
 
+// status line
+// header
+// body
+// 问题1: 如何判断完成结束（可能存在分批触发data事件传输）
 class Response {
 
 }
@@ -126,7 +134,7 @@ class ResponseParser {
       if (char === '\n') {
         this.current = this.WAITING_HEADER_NAME
       }
-    }
+    } 
     // headers
     else if (this.current === this.WAITING_HEADER_NAME) {
       if (char === ':') {
@@ -215,6 +223,7 @@ class TrunkedBodyParser {
       }
     }
     else if (this.current === this.READING_TRUNK) {
+      // FINISH: 补全逻辑
       if (char !== '\n' && char !== '\r') {
         this.content.push(char)
       }

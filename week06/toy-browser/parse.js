@@ -1,4 +1,5 @@
 // 参考：https://html.spec.whatwg.org/multipage/#toc-syntax Tokenization
+const { rules, addCssRules } = require('./css-rules.js')
 
 let currentToken = null
 let currentAttribute = null
@@ -7,11 +8,114 @@ let stack = [{type: 'document', children: []}]
 
 let currentTextNode = null
 
-function emit (token) {
-  if (token.type === 'text') {
-    return
+function compare (sp1, sp2) {
+  if (sp1[0] - sp2[0]) {
+    return sp1[0] - sp2[0]
+  }
+  if (sp1[1] - sp2[1]) {
+    return sp1[1] - sp2[1]
+  }
+  if (sp1[2] - sp2[2]) {
+    return sp1[2] - sp2[2]
   }
 
+  return sp1[3] - sp2[3]
+}
+
+function specificity (selector) {
+  const p = [0, 0, 0, 0]
+  const selectorParts = selector.split(' ')
+  for (let part of selectorParts) {
+    if (part.charAt(0) === '#') {
+      p[1] += 1
+    } else if (part.charAt(0) === '.') {
+      p[2] += 1
+    } else {
+      p[3] += 1
+    }
+  }
+  return p
+}
+
+function match (element, selector) {
+  if (!selector || !element.attributes) {
+    return false
+  }
+
+  // id选择器
+  if (selector.charAt(0) === '#') {
+    // 寻找元素的id属性
+    const attr = element.attributes.filter(attr => attr.name === 'id')[0]
+    if (attr && attr.value === selector.replace('#', '')) {
+      return true
+    }
+  } 
+  // 类选择器
+  else if (selector.charAt(0) === '.') {
+    const attr = element.attributes.filter(attr => attr.name === 'class')[0]
+    if (attr && attr.value === selector.replace('.', '')) {
+      return true
+    }
+  }
+  // 标签选择器
+  else if (selector === element.tagName) {
+    return true
+  }
+
+  return false
+}
+
+function computeCSS (element) {
+  // stack.slice() 复制数组
+  const elements = stack.slice().reverse()
+  // 获取和计算父元素是由内而外的，css由右向左解析
+
+  if (!element.computedStyle) {
+    element.computedStyle = {}
+  }
+
+  for (let rule of rules) {
+    const selectorParts = rule.selectors[0].split(" ").reverse()
+
+    if (!match(element, selectorParts[0])) { // 如果当前元素不匹配
+      continue
+    }
+
+    let matched = false
+
+    // 循环elements和selectorParts看是否完全匹配
+    let j = 1
+    for (let i = 0; i < elements.length; i++) {
+      if (match(elements[i], selectorParts[j])) {
+        j++
+      }
+    }
+    if (j >= selectorParts.length) {
+      matched = true
+    }
+    if (matched) {
+      const sp = specificity(rule.selectors[0])
+      const computedStyle = element.computedStyle
+      for (let declaration of rule.declarations) {
+        if (!computedStyle[declaration.property]) { // property: width
+          computedStyle[declaration.property] = {}
+        }
+
+        if (!computedStyle[declaration.property].specificity) { // 如果是空的，存一下sp
+          computedStyle[declaration.property].value = declaration.value
+          computedStyle[declaration.property].specificity = sp
+        } else if (compare(computedStyle[declaration.property].specificity, sp) < 0) { // 如果原来优先级低，新写sp
+          computedStyle[declaration.property].value = declaration.value
+          computedStyle[declaration.property].specificity = sp
+        }
+      }
+
+      console.log(element.computedStyle)
+    }
+  }
+}
+
+function emit (token) {
   let top = stack[stack.length - 1]
 
   if (token.type === 'startTag') {
@@ -32,6 +136,8 @@ function emit (token) {
       }
     }
 
+    computeCSS(element)
+
     top.children.push(element)
     element.parent = top
 
@@ -44,6 +150,10 @@ function emit (token) {
     if (top.tagName !== token.tagName) {
       throw new Error('Tag start end doesn\'t match')
     } else {
+      // 遇到style标签时，执行添加css规则的操作
+      if (top.tagName === 'style') {
+        addCssRules(top.children[0].content)
+      }
       stack.pop()
     }
     currentTextNode = null
@@ -284,5 +394,5 @@ module.exports.parseHTML = function parseHTML (html) {
     state = state(c)
   }
   state = state(EOF)
-  console.log(stack[0])
+  // console.log(stack[0])
 }
